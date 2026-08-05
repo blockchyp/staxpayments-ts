@@ -1,0 +1,96 @@
+{
+  "name": "staxpayments-typescript",
+  "version": "2.30.5",
+  "description": "Stax Payments Typescript Client",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "browser": "_bundles/staxpayments.min.js",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./payments": {
+      "types": "./lib/src/payments.d.ts",
+      "default": "./lib/src/payments.js"
+    },
+    "./terminals": {
+      "types": "./lib/src/terminals.d.ts",
+      "default": "./lib/src/terminals.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "clean": "tsc --build --clean && rm -rf lib && rm -rf _bundles",
+    "test": "npm run build && jasmine lib/spec/*.js --stop-on-failure=false",
+    "build": "npm run lint && tsc",
+    "prod": "npm run build && webpack",
+    "prepare": "npm run prod"
+  },
+  "files": [
+    "index.ts",
+    "src/",
+    "spec/",
+    "eslint.config.mjs",
+    "index.d.ts",
+    "lib/",
+    "_bundles/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blockchyp/staxpayments-ts.git"
+  },
+  "keywords": [
+    "payments",
+    "blockchain"
+  ],
+  "author": "jeffreydpayne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blockchyp/staxpayments-ts/issues"
+  },
+  "homepage": "https://github.com/blockchyp/staxpayments-ts#readme",
+  "devDependencies": {
+    "@types/aes-js": "^3.1.4",
+    "@types/create-hmac": "^1.1.3",
+    "@types/is-windows": "^1.0.2",
+    "@types/jasmine": "^5.1.4",
+    "@types/node": "^20.12.12",
+    "@types/randombytes": "^2.0.3",
+    "@types/sha.js": "^2.4.4",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "browserify": "^16.5.2",
+    "eslint": "^9.36.0",
+    "fs": "0.0.1-security",
+    "is-windows": "^1.0.2",
+    "jasmine": "^3.99.0",
+    "jasmine-promises": "^0.4.1",
+    "terser-webpack-plugin": "^5.3.10",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "uglify-js": "^3.4.2",
+    "uuid": "^3.3.3",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "aes-js": "^3.1.1",
+    "axios": "^1.15.0",
+    "base32": "^0.0.7",
+    "bn.js": "^4.12.2",
+    "buffer": "^6.0.3",
+    "cached-path-relative": "^1.0.2",
+    "@noble/curves": "^1.6.0",
+    "@noble/hashes": "^1.5.0",
+    "glob": "^13.0.0",
+    "moment": "^2.22.2",
+    "stream-browserify": "^3.0.0",
+    "uuidv4": "^6.2.13"
+  },
+  "overrides": {
+    "follow-redirects": "^1.16.0"
+  }
+}

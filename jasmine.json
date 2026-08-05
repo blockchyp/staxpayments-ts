@@ -1,0 +1,8 @@
+{
+    "spec_files": [
+      "itest/**/*Spec.ts"
+    ],
+    "helpers": [
+      "jasmine-helper.js"
+    ]
+}
