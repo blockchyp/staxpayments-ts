@@ -51,20 +51,33 @@ const client = new StaxPayments.StaxPaymentsClient(
   new StaxPayments.StaxApiCredentials('<your-stax-bearer-token>')
 );
 
-const request = new StaxPayments.AuthorizationRequest();
+const request = new StaxPayments.AuthRequest();
 request.test = true;
 request.terminalName = 'Test Terminal';
 request.amount = '55.00';
 
 client.payments.charge(request)
-  .then(function (httpResponse) {
-    const response: StaxPayments.AuthorizationResponse = httpResponse.data;
+  .then(function (response: StaxPayments.AuthResponse) {
     console.log('Response: ' + JSON.stringify(response));
   })
   .catch(function (error: any) {
     console.log(error);
   });
 ```
+
+## Stax Payments Models
+
+`charge` and `preauth` accept an `AuthRequest` and resolve to an `AuthResponse`:
+
+| Model | Purpose |
+| ----- | ------- |
+| `AuthRequest` | Charge and preauth request. Carries the amount, terminal, currency, tip and tax subtotals, and the test flag. |
+| `AuthResponse` | Charge and preauth response. Carries the approval, transaction id, auth code, authorized and requested amounts, card details such as the masked PAN, entry method and network, and the `receiptSuggestions` needed for PCI and EMV compliance. |
+
+`AuthResponse.transactionId` is the Stax transaction id.
+
+Note that these two operations resolve to the model directly rather than to an
+`AxiosResponse`, unlike the other endpoints in this SDK.
 
 
 
@@ -161,17 +174,16 @@ const client = new StaxPayments.StaxPaymentsClient(
   new StaxPayments.StaxApiCredentials('<your-stax-bearer-token>')
 );
 
-const request = new StaxPayments.AuthorizationRequest();
+const request = new StaxPayments.AuthRequest();
 request.test = true;
 request.terminalName = 'Test Terminal';
 request.amount = '55.00';
 
 client.payments.charge(request)
-.then(function(httpResponse) {
-    const response: StaxPayments.AuthorizationResponse = httpResponse.data;
+.then(function(response: StaxPayments.AuthResponse) {
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -234,17 +246,16 @@ const client = new StaxPayments.StaxPaymentsClient(
   new StaxPayments.StaxApiCredentials('<your-stax-bearer-token>')
 );
 
-const request = new StaxPayments.AuthorizationRequest();
+const request = new StaxPayments.AuthRequest();
 request.test = true;
 request.terminalName = 'Test Terminal';
 request.amount = '27.00';
 
 client.payments.preauth(request)
-.then(function(httpResponse) {
-    const response: StaxPayments.AuthorizationResponse = httpResponse.data;
+.then(function(response: StaxPayments.AuthResponse) {
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -299,7 +310,7 @@ client.terminals.ping(request)
     const response: StaxPayments.PingResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -340,7 +351,7 @@ client.terminals.locate(request)
     const response: StaxPayments.LocateResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -379,7 +390,7 @@ client.terminals.clear(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -447,7 +458,7 @@ client.terminals.terminalStatus(request)
     const response: StaxPayments.TerminalStatusResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -502,7 +513,7 @@ client.terminals.captureSignature(request)
     const response: StaxPayments.CaptureSignatureResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -577,7 +588,7 @@ client.terminals.newTransactionDisplay(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -660,7 +671,7 @@ client.terminals.updateTransactionDisplay(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -700,7 +711,7 @@ client.terminals.message(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -751,7 +762,7 @@ client.terminals.booleanPrompt(request)
     const response: StaxPayments.BooleanPromptResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -809,7 +820,7 @@ client.terminals.textPrompt(request)
     const response: StaxPayments.TextPromptResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -848,7 +859,7 @@ client.terminals.terminals(request)
     const response: StaxPayments.TerminalProfileResponse = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -887,7 +898,7 @@ client.terminals.deactivateTerminal(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -931,7 +942,7 @@ client.terminals.activateTerminal(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 
@@ -967,7 +978,7 @@ client.terminals.reboot(request)
     const response: StaxPayments.Acknowledgement = httpResponse.data;
     console.log('Response: ' + JSON.stringify(response));
   })
-  .catch(function (error: any) {
+.catch(function (error: any) {
     console.log(error);
   });
 

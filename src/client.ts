@@ -8,6 +8,10 @@
 import axios, {AxiosRequestConfig, AxiosResponse}  from 'axios'
 import CryptoUtils from './cryptoutils'
 import * as nodeHttps from 'https'
+import * as fs from 'fs'
+import * as os from 'os'
+import * as path from 'path'
+import * as crypto from 'crypto'
 
 /* eslint-disable no-unused-vars */
 export const CardType = Object.freeze({
@@ -87,6 +91,31 @@ const TRANSIENT_CREDENTIALS_PATH: string = '/terminals/transient-credentials';
 // buffer).
 const EXPIRY_SKEW_MS: number = 30 * 1000;
 
+// EXPIRY_FALLBACK_MS is how long transient credentials are assumed to live when
+// the core API does not state an expiry. The core endpoint does not populate
+// expiresAt yet, so in practice this is the credential lifetime.
+const EXPIRY_FALLBACK_MS: number = 8 * 60 * 60 * 1000;
+
+// OFFLINE_FIXED_KEY is the static half of the offline route cache key. It is
+// hashed together with the current signing key, so a cache file is readable
+// only by a client holding the same credentials. It matches the constant used
+// by the other Stax Payments SDKs, so the cache format is portable between
+// them.
+const OFFLINE_FIXED_KEY: string = 'cb22789c9d5c344a10e0474f134db39e25eb3bbf5a1b1a5e89b507f15ea9519c';
+
+// OFFLINE_ROUTE_CACHE_FILE is where terminal routes are persisted so a terminal
+// remains reachable when the gateway is not.
+const OFFLINE_ROUTE_CACHE_FILE: string = path.join(os.tmpdir(), '.staxpayments_routes');
+
+interface OfflineRouteCacheEntry {
+  TTL: string;
+  Route: TerminalRoute;
+}
+
+interface OfflineRouteCache {
+  routes: { [key: string]: OfflineRouteCacheEntry };
+}
+
 interface TransientCredentials {
   apiKey: string;
   bearerToken: string;
@@ -97,6 +126,8 @@ interface TransientCredentials {
 }
 
 interface TerminalRoute {
+  success?: boolean;
+  exists?: boolean;
   terminalName: string;
   ipAddress: string;
   transientCredentials: {
@@ -105,6 +136,7 @@ interface TerminalRoute {
     signingKey: string;
   };
   cloudRelayEnabled: boolean;
+  https?: boolean;
 }
 
 interface RouteCacheEntry {
@@ -195,16 +227,25 @@ export class StaxPaymentsBaseClient {
   // otherwise.
   async routeTransaction(method: any, request: any, terminalPath: string, cloudPath: string): Promise<any> {
     await this.ensure();
+    await this._populateSignatureOptions(request);
+
+    let response: any;
     if (this.isTerminalRouted(request)) {
+      // A terminal that cannot be routed is an error, not a reason to send the
+      // transaction somewhere else: _resolveTerminalRoute throws.
       const route = await this._resolveTerminalRoute(request.terminalName);
-      if (route && !route.cloudRelayEnabled) {
-        return this._terminalRequest(method, route, terminalPath, request);
-      }
+      response = route.cloudRelayEnabled
+        ? await this._relayRequest(method, cloudPath, request)
+        : await this._terminalRequest(method, route, terminalPath, request);
+    } else {
+      response = await this._gatewayRequest(method, cloudPath, request);
     }
-    if (cloudPath) {
-      return this._relayRequest(method, cloudPath, request);
-    }
-    return this._gatewayRequest(method, terminalPath, request);
+
+    // routeTransaction resolves to the AxiosResponse; the signature lives on
+    // the payload.
+    await this._handleSignature(request, response ? response.data : undefined);
+
+    return response;
   }
 
   async routeTransactionPost(request: any, terminalPath: string, cloudPath: string): Promise<any> {
@@ -241,13 +282,11 @@ export class StaxPaymentsBaseClient {
     return false;
   }
 
+  // isTerminalRouted reports whether a request names a terminal. Whether that
+  // terminal is reached directly or over cloud relay is a property of its
+  // route, resolved per terminal, not a client-wide setting.
   isTerminalRouted(request: any): boolean {
-    if (this.cloudRelay) {
-      return false;
-    } else if (request.terminalName) {
-      return true;
-    }
-    return false;
+    return Boolean(request && request.terminalName);
   }
 
   // ensure guarantees the client holds valid merchant-scoped transient
@@ -271,11 +310,13 @@ export class StaxPaymentsBaseClient {
   }
 
   private async _exchange(): Promise<void> {
-    this.bcCredentials = undefined;
+    // The cached credentials are left in place until the exchange succeeds. A
+    // failed refresh should not discard credentials that may still be usable,
+    // and it must not leave the client unauthenticated.
     const response = await this._coreRequest('get', TRANSIENT_CREDENTIALS_PATH);
     const data = response.data as TransientCredentials;
     this.bcCredentials = new StaxPaymentsCredentials(data.apiKey, data.bearerToken, data.signingKey);
-    this.bcCredentialsExpiresAtMs = data.expiresAt ? Date.parse(data.expiresAt) : Date.now() + 5 * 60 * 1000;
+    this.bcCredentialsExpiresAtMs = data.expiresAt ? Date.parse(data.expiresAt) : Date.now() + EXPIRY_FALLBACK_MS;
   }
 
   _relayRequest(method: any, path: string, request: any): Promise<any> {
@@ -460,22 +501,203 @@ export class StaxPaymentsBaseClient {
     return result;
   }
 
-  async _resolveTerminalRoute(terminalName: string): Promise<TerminalRoute> {
-    const cacheEntry: RouteCacheEntry | undefined = this._routeCache[terminalName];
-
-    if (cacheEntry) {
-      if (cacheEntry.ttl >= new Date().getTime()) {
-        return cacheEntry.route;
-      }
+  // _populateSignatureOptions infers the signature image format from the
+  // requested file extension when the caller did not state one, and rejects a
+  // format the terminal cannot produce before the transaction is sent.
+  private async _populateSignatureOptions(request: any): Promise<void> {
+    if (!request || !request.sigFile) {
+      return;
     }
 
-    const routeResponse: any = await this._gatewayRequest('get', '/api/terminal-route?terminal=' + terminalName);
-    const route: TerminalRoute = routeResponse.data;
-    this._routeCache[terminalName] =
-      {
-        ttl: new Date().getTime() + (this.routeCacheTTL * 60000),
-        route: route
+    if (!request.sigFormat) {
+      const parts = String(request.sigFile).split('.');
+      request.sigFormat = parts[parts.length - 1].toLowerCase();
+    }
+
+    const valid: string[] = [
+      SignatureFormat.NONE, SignatureFormat.PNG, SignatureFormat.JPG, SignatureFormat.GIF,
+    ];
+
+    if (valid.indexOf(request.sigFormat) < 0) {
+      throw new Error('invalid signature format: ' + request.sigFormat);
+    }
+  }
+
+  // _handleSignature writes the captured signature image to the file the caller
+  // asked for and clears it from the response, so the hex payload is not left
+  // in a struct the caller is likely to log.
+  private async _handleSignature(request: any, response: any): Promise<void> {
+    if (!request || !request.sigFile || !response || !response.sigFile) {
+      return;
+    }
+
+    const content = Buffer.from(response.sigFile, 'hex');
+    response.sigFile = '';
+
+    fs.writeFileSync(request.sigFile, content, { mode: 0o600 });
+  }
+
+  // _routeCacheKey scopes a cached route to the credentials that resolved it, so
+  // rotating credentials cannot serve a route resolved under the previous set.
+  private _routeCacheKey(terminalName: string): string {
+    const apiKey = this.bcCredentials ? this.bcCredentials.apiKey : '';
+    return apiKey + terminalName;
+  }
+
+  // _deriveOfflineKey hashes the fixed key together with the current signing
+  // key. The cache is therefore readable only while the same credentials are
+  // held, and unreadable to anything else that finds the file.
+  private _deriveOfflineKey(): Buffer {
+    const hash = crypto.createHash('sha256');
+    hash.update(Buffer.from(OFFLINE_FIXED_KEY, 'hex'));
+    hash.update(Buffer.from(this.bcCredentials ? this.bcCredentials.signingKey : '', 'hex'));
+    return hash.digest();
+  }
+
+  // AES/CBC/PKCS7 over the first 16 bytes of the derived key, hex encoded with
+  // the IV prefixed. The scheme is shared with the other Stax Payments SDKs.
+  private _encrypt(value: string): string {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-128-cbc', this._deriveOfflineKey().subarray(0, 16), iv);
+    const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+    return Buffer.concat([iv, encrypted]).toString('hex');
+  }
+
+  private _decrypt(value: string): string {
+    const raw = Buffer.from(value, 'hex');
+    const decipher = crypto.createDecipheriv('aes-128-cbc', this._deriveOfflineKey().subarray(0, 16), raw.subarray(0, 16));
+    return Buffer.concat([decipher.update(raw.subarray(16)), decipher.final()]).toString('utf8');
+  }
+
+  private _readOfflineCache(): OfflineRouteCache | undefined {
+    try {
+      if (!fs.existsSync(OFFLINE_ROUTE_CACHE_FILE)) {
+        return undefined;
+      }
+      return JSON.parse(fs.readFileSync(OFFLINE_ROUTE_CACHE_FILE, 'utf8')) as OfflineRouteCache;
+    } catch (e) {
+      // An unreadable or corrupt cache is a missing cache, never a failed
+      // transaction.
+      return undefined;
+    }
+  }
+
+  // _readFromOfflineCache returns a persisted route. Credentials are decrypted
+  // on the way out. When stale is false an expired entry is ignored; when true
+  // it is served anyway, which is what keeps a terminal reachable while the
+  // gateway is not.
+  private _readFromOfflineCache(terminalName: string, stale: boolean): TerminalRoute | undefined {
+    const cache = this._readOfflineCache();
+    if (!cache || !cache.routes) {
+      return undefined;
+    }
+
+    const entry = cache.routes[this._routeCacheKey(terminalName)];
+    if (!entry) {
+      return undefined;
+    }
+
+    if (!stale && Date.parse(entry.TTL) <= Date.now()) {
+      return undefined;
+    }
+
+    try {
+      const route = entry.Route;
+      route.transientCredentials = {
+        apiKey: this._decrypt(route.transientCredentials.apiKey),
+        bearerToken: this._decrypt(route.transientCredentials.bearerToken),
+        signingKey: this._decrypt(route.transientCredentials.signingKey),
       };
+      return route;
+    } catch (e) {
+      // Written under different credentials, so it cannot be decrypted now.
+      return undefined;
+    }
+  }
+
+  private _updateOfflineCache(route: TerminalRoute, ttlMs: number): void {
+    try {
+      const cache: OfflineRouteCache = this._readOfflineCache() ?? { routes: {} };
+      if (!cache.routes) {
+        cache.routes = {};
+      }
+
+      cache.routes[this._routeCacheKey(route.terminalName)] = {
+        TTL: new Date(ttlMs).toISOString(),
+        Route: {
+          ...route,
+          transientCredentials: {
+            apiKey: this._encrypt(route.transientCredentials.apiKey),
+            bearerToken: this._encrypt(route.transientCredentials.bearerToken),
+            signingKey: this._encrypt(route.transientCredentials.signingKey),
+          },
+        },
+      };
+
+      fs.writeFileSync(OFFLINE_ROUTE_CACHE_FILE, JSON.stringify(cache), { mode: 0o600 });
+    } catch (e) {
+      // Persisting is an optimization; the in-memory cache still stands.
+    }
+  }
+
+  // _requestRouteFromGateway resolves a route and rejects anything that is not
+  // a usable one, so a failed lookup is never cached or routed on.
+  private async _requestRouteFromGateway(terminalName: string): Promise<TerminalRoute> {
+    const routeResponse: any = await this._gatewayRequest(
+      'get', '/api/terminal-route?terminal=' + encodeURIComponent(terminalName));
+    const route: TerminalRoute = routeResponse.data;
+
+    if (!route || route.success === false || !route.ipAddress) {
+      throw new Error('unknown terminal: ' + terminalName);
+    }
+
+    route.exists = true;
+    route.https = true;
+
+    return route;
+  }
+
+  async _resolveTerminalRoute(terminalName: string): Promise<TerminalRoute> {
+    const key = this._routeCacheKey(terminalName);
+    const cacheEntry: RouteCacheEntry | undefined = this._routeCache[key];
+
+    if (cacheEntry && cacheEntry.ttl >= new Date().getTime()) {
+      return cacheEntry.route;
+    }
+
+    // An IP address addresses a terminal directly and needs no lookup.
+    if ((terminalName.match(/\./g) || []).length === 3) {
+      return {
+        terminalName: terminalName,
+        ipAddress: terminalName,
+        cloudRelayEnabled: false,
+        exists: true,
+        https: false,
+        transientCredentials: { apiKey: '', bearerToken: '', signingKey: '' },
+      };
+    }
+
+    const offline = this._readFromOfflineCache(terminalName, false);
+    if (offline) {
+      return offline;
+    }
+
+    let route: TerminalRoute;
+    try {
+      route = await this._requestRouteFromGateway(terminalName);
+    } catch (e) {
+      // The gateway is unreachable or does not know the terminal. A stale
+      // persisted route is better than no transaction.
+      const stale = this._readFromOfflineCache(terminalName, true);
+      if (stale) {
+        return stale;
+      }
+      throw e;
+    }
+
+    const ttl = new Date().getTime() + (this.routeCacheTTL * 60000);
+    this._routeCache[key] = { ttl: ttl, route: route };
+    this._updateOfflineCache(route, ttl);
 
     return route;
   }
