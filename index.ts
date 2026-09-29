@@ -11,6 +11,11 @@ export * from './src/staxpaymentsclient'
 export * from './src/client'
 export * from './src/models'
 
+// Mappers between the Stax Payments models and the BlockChyp wire models. The
+// namespace clients apply these themselves; they are exported so a caller can
+// map explicitly, and so they can be tested on their own.
+export * from './src/mappers'
+
 // Per-namespace clients. Each namespace is also importable directly via its
 // package subpath, e.g. `import { PaymentsClient } from
 // '@blockchyp/staxpayments-ts/payments'`.

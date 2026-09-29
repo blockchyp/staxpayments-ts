@@ -168,6 +168,11 @@ export class ReceiptSuggestions {
    */
     cashDiscount?: string;
 
+  /**
+   * The amount added to the transaction to cover processing fees.
+   */
+    serviceFeeAmount?: string;
+
     // Constructor with default values for optional fields
     constructor(
         aid: string | undefined = undefined,
@@ -194,6 +199,7 @@ export class ReceiptSuggestions {
         cashBackAmount: string | undefined = undefined,
         surcharge: string | undefined = undefined,
         cashDiscount: string | undefined = undefined,
+        serviceFeeAmount: string | undefined = undefined,
         ) {
         this.aid = aid;
         this.arqc = arqc;
@@ -219,6 +225,7 @@ export class ReceiptSuggestions {
         this.cashBackAmount = cashBackAmount;
         this.surcharge = surcharge;
         this.cashDiscount = cashDiscount;
+        this.serviceFeeAmount = serviceFeeAmount;
         }
 }
 
@@ -2022,6 +2029,12 @@ export class AuthorizationRequest {
    */
     externalCustomerCompany?: string;
 
+  /**
+   * The external merchant's own reference for the transaction. It is stored with the
+   * transaction and echoed back on the response, and is not used for duplicate detection.
+   */
+    externalTransactionRef?: string;
+
     // Constructor with default values for optional fields
     constructor(
         timeout: number | null = null,
@@ -2112,6 +2125,7 @@ export class AuthorizationRequest {
         externalCustomerEmail: string | undefined = undefined,
         externalCustomerPhone: string | undefined = undefined,
         externalCustomerCompany: string | undefined = undefined,
+        externalTransactionRef: string | undefined = undefined,
         ) {
         this.timeout = timeout;
         this.test = test;
@@ -2201,6 +2215,7 @@ export class AuthorizationRequest {
         this.externalCustomerEmail = externalCustomerEmail;
         this.externalCustomerPhone = externalCustomerPhone;
         this.externalCustomerCompany = externalCustomerCompany;
+        this.externalTransactionRef = externalTransactionRef;
         }
 }
 
@@ -3102,6 +3117,12 @@ export class AuthorizationResponse {
    */
     enhancedDataPassed?: boolean;
 
+  /**
+   * The external merchant's own reference for the transaction. It is stored with the
+   * transaction and echoed back on the response, and is not used for duplicate detection.
+   */
+    externalTransactionRef?: string;
+
     // Constructor with default values for optional fields
     constructor(
         success: boolean | null = null,
@@ -3165,6 +3186,7 @@ export class AuthorizationResponse {
         status: string | null = null,
         cardMetadata: CardMetadata | undefined = undefined,
         enhancedDataPassed: boolean = false,
+        externalTransactionRef: string | undefined = undefined,
         ) {
         this.success = success;
         this.error = error;
@@ -3227,6 +3249,7 @@ export class AuthorizationResponse {
         this.status = status;
         this.cardMetadata = cardMetadata;
         this.enhancedDataPassed = enhancedDataPassed;
+        this.externalTransactionRef = externalTransactionRef;
         }
 }
 
@@ -4173,6 +4196,227 @@ export class UploadMetadata {
         this.uploadId = uploadId;
         this.fileSize = fileSize;
         this.fileName = fileName;
+        }
+}
+
+  /**
+   * Models a Stax Payments charge or preauth request.
+   */
+export class AuthRequest {
+
+  /**
+   * The tip amount.
+   */
+    tipAmount?: string;
+
+  /**
+   * The tax amount.
+   */
+    taxAmount?: string;
+
+  /**
+   * The name of the terminal that should run the transaction.
+   */
+    terminalName?: string;
+
+  /**
+   * The requested amount.
+   */
+    amount: string | null = null;
+
+  /**
+   * The transaction currency code.
+   */
+    currencyCode: string | null = null;
+
+  /**
+   * That the terminal should prompt for a tip.
+   */
+    promptForTip?: boolean;
+
+  /**
+   * Whether or not to route the transaction to the test gateway.
+   */
+    test: boolean | null = null;
+
+  /**
+   * That the payment method should be added to the token vault alongside the
+   * authorization.
+   */
+    enroll?: boolean;
+
+  /**
+   * An optional field that can be used to pass through data to external partners.
+   */
+    externalPartnerMetadata?: string;
+
+  /**
+   * Your own reference for the transaction. It is stored with the transaction and echoed
+   * back on the response.
+   */
+    transactionRef?: string;
+
+    // Constructor with default values for optional fields
+    constructor(
+        tipAmount: string | undefined = undefined,
+        taxAmount: string | undefined = undefined,
+        terminalName: string | undefined = undefined,
+        amount: string | null = null,
+        currencyCode: string | null = null,
+        promptForTip: boolean = false,
+        test: boolean | null = null,
+        enroll: boolean = false,
+        externalPartnerMetadata: string | undefined = undefined,
+        transactionRef: string | undefined = undefined,
+        ) {
+        this.tipAmount = tipAmount;
+        this.taxAmount = taxAmount;
+        this.terminalName = terminalName;
+        this.amount = amount;
+        this.currencyCode = currencyCode;
+        this.promptForTip = promptForTip;
+        this.test = test;
+        this.enroll = enroll;
+        this.externalPartnerMetadata = externalPartnerMetadata;
+        this.transactionRef = transactionRef;
+        }
+}
+
+  /**
+   * Models a Stax Payments charge or preauth response.
+   */
+export class AuthResponse {
+
+  /**
+   * Whether or not the request succeeded.
+   */
+    success: boolean | null = null;
+
+  /**
+   * The error, if an error occurred.
+   */
+    error: string | null = null;
+
+  /**
+   * A narrative description of the transaction result.
+   */
+    responseDescription: string | null = null;
+
+  /**
+   * The Stax transaction id.
+   */
+    transactionId?: string;
+
+  /**
+   * That the transaction was approved.
+   */
+    approved: boolean | null = null;
+
+  /**
+   * The auth code from the payment network.
+   */
+    authCode?: string;
+
+  /**
+   * The requested amount.
+   */
+    requestedAmount: string | null = null;
+
+  /**
+   * The authorized amount, which may differ from the requested amount on a partial auth.
+   */
+    authorizedAmount: string | null = null;
+
+  /**
+   * The transaction currency code.
+   */
+    currencyCode: string | null = null;
+
+  /**
+   * The entry method, such as CHIP, MSR or KEYED.
+   */
+    entryMethod?: string;
+
+  /**
+   * The masked primary account number.
+   */
+    maskedPan?: string;
+
+  /**
+   * The card network.
+   */
+    network?: string;
+
+  /**
+   * The timestamp of the transaction.
+   */
+    timestamp: string | null = null;
+
+  /**
+   * The current status of a transaction.
+   */
+    status: string | null = null;
+
+  /**
+   * Details about a payment card derived from its BIN/IIN.
+   */
+    cardMetadata?: CardMetadata;
+
+  /**
+   * Suggested receipt fields.
+   */
+    receiptSuggestions: ReceiptSuggestions | null = null;
+
+  /**
+   * That the transaction ran on the test gateway.
+   */
+    test: boolean | null = null;
+
+  /**
+   * Your own reference for the transaction. It is stored with the transaction and echoed
+   * back on the response.
+   */
+    transactionRef?: string;
+
+    // Constructor with default values for optional fields
+    constructor(
+        success: boolean | null = null,
+        error: string | null = null,
+        responseDescription: string | null = null,
+        transactionId: string | undefined = undefined,
+        approved: boolean | null = null,
+        authCode: string | undefined = undefined,
+        requestedAmount: string | null = null,
+        authorizedAmount: string | null = null,
+        currencyCode: string | null = null,
+        entryMethod: string | undefined = undefined,
+        maskedPan: string | undefined = undefined,
+        network: string | undefined = undefined,
+        timestamp: string | null = null,
+        status: string | null = null,
+        cardMetadata: CardMetadata | undefined = undefined,
+        receiptSuggestions: ReceiptSuggestions | null = null,
+        test: boolean | null = null,
+        transactionRef: string | undefined = undefined,
+        ) {
+        this.success = success;
+        this.error = error;
+        this.responseDescription = responseDescription;
+        this.transactionId = transactionId;
+        this.approved = approved;
+        this.authCode = authCode;
+        this.requestedAmount = requestedAmount;
+        this.authorizedAmount = authorizedAmount;
+        this.currencyCode = currencyCode;
+        this.entryMethod = entryMethod;
+        this.maskedPan = maskedPan;
+        this.network = network;
+        this.timestamp = timestamp;
+        this.status = status;
+        this.cardMetadata = cardMetadata;
+        this.receiptSuggestions = receiptSuggestions;
+        this.test = test;
+        this.transactionRef = transactionRef;
         }
 }
 

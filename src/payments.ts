@@ -7,6 +7,7 @@
  */
 import {AxiosResponse} from 'axios'
 import * as Models from './models'
+import * as Mappers from './mappers'
 import {StaxPaymentsBaseClient, StaxApiCredentials, StaxPaymentsCredentials} from './client'
 
 // Re-exported so this namespace can be consumed directly via its subpath
@@ -23,13 +24,25 @@ export class PaymentsClient {
   /**
    * Executes a standard direct preauth and capture.
    */
-  async charge(request: Models.AuthorizationRequest): Promise<AxiosResponse<Models.AuthorizationResponse>> {
-    return this.base.routeTransaction('post', request, '/api/charge', '/api/charge');
+  // Takes and returns the Stax Payments models. The BlockChyp wire models are
+  // an implementation detail: the request is mapped on the way out and the
+  // reply on the way back, so the AxiosResponse wrapper is not returned — its
+  // data would no longer be what the transport received.
+  async charge(request: Models.AuthRequest): Promise<Models.AuthResponse> {
+    const response = await this.base.routeTransaction('post', Mappers.authRequestMapper(request), '/api/charge', '/api/charge');
+
+    return Mappers.authResponseMapper(response.data);
   }
   /**
    * Executes a preauthorization intended to be captured later.
    */
-  async preauth(request: Models.AuthorizationRequest): Promise<AxiosResponse<Models.AuthorizationResponse>> {
-    return this.base.routeTransaction('post', request, '/api/preauth', '/api/preauth');
+  // Takes and returns the Stax Payments models. The BlockChyp wire models are
+  // an implementation detail: the request is mapped on the way out and the
+  // reply on the way back, so the AxiosResponse wrapper is not returned — its
+  // data would no longer be what the transport received.
+  async preauth(request: Models.AuthRequest): Promise<Models.AuthResponse> {
+    const response = await this.base.routeTransaction('post', Mappers.authRequestMapper(request), '/api/preauth', '/api/preauth');
+
+    return Mappers.authResponseMapper(response.data);
   }
 }
