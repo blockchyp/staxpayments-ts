@@ -2,7 +2,7 @@
 # Stax Payments TypeScript SDK
 
 [![Build Status](https://github.com/blockchyp/staxpayments-ts/actions/workflows/main.yml/badge.svg)](https://github.com/blockchyp/staxpayments-ts/actions/workflows/main.yml)
-[![NPM](https://img.shields.io/npm/v/@blockchyp/staxpayments-ts)](https://www.npmjs.com/package/@blockchyp/staxpayments-ts)
+[![NPM](https://img.shields.io/npm/v/@staxpayments/staxpayments-ts)](https://www.npmjs.com/package/@staxpayments/staxpayments-ts)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/blockchyp/staxpayments-ts/blob/master/LICENSE)
 
 This is the SDK for TypeScript. Like all Stax Payments SDKs, it provides a full
@@ -28,7 +28,7 @@ The Stax Payments SDK is installable via NPM. Type the following command to add
 Stax Payments to your package.json.
 
 ```
-npm install @blockchyp/staxpayments-ts --save
+npm install @staxpayments/staxpayments-ts --save
 ```
 
 ## A Simple Example
@@ -42,7 +42,7 @@ namespaces (one per API area) reached as properties — e.g. `client.payments`,
 of transient credentials is fetched and reused across every namespace.
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // Construct the root client with your Stax bearer token. Terminal transactions
 // (charge, preauth) transparently exchange it for short-lived transient
@@ -165,7 +165,7 @@ might be maliciously running on the point-of-sale system.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -237,7 +237,7 @@ Note that preauths are not supported for cryptocurrency.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -293,7 +293,7 @@ If you get a positive response, you've successfully verified all of the followin
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -334,7 +334,7 @@ The terminal will also return the public key for the terminal.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -372,7 +372,7 @@ idle state.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -441,7 +441,7 @@ The table below lists all possible status responses.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -494,7 +494,7 @@ width, preserving the aspect ratio of the original image.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -550,7 +550,7 @@ and amount.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -633,7 +633,7 @@ and amount.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -692,7 +692,7 @@ Just specify the target terminal and the message using the `message` parameter.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -741,7 +741,7 @@ using the `yesCaption` and `noCaption` request parameters.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -801,7 +801,7 @@ the response is returned in the `response` field.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -842,7 +842,7 @@ current branding image displayed on the terminal
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -881,7 +881,7 @@ terminal inventory.  The terminal will be remotely cleared and factory reset.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -924,7 +924,7 @@ cannot be overridden.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse
@@ -961,7 +961,7 @@ This API reboots the terminal.
 
 
 ```typescript
-import * as StaxPayments from '@blockchyp/staxpayments-ts';
+import * as StaxPayments from '@staxpayments/staxpayments-ts';
 
 // construct the root client with your Stax bearer token; terminal transactions
 // transparently exchange it for short-lived transient credentials and reuse

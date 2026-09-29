@@ -103,9 +103,12 @@ const EXPIRY_FALLBACK_MS: number = 8 * 60 * 60 * 1000;
 // them.
 const OFFLINE_FIXED_KEY: string = 'cb22789c9d5c344a10e0474f134db39e25eb3bbf5a1b1a5e89b507f15ea9519c';
 
-// OFFLINE_ROUTE_CACHE_FILE is where terminal routes are persisted so a terminal
-// remains reachable when the gateway is not.
-const OFFLINE_ROUTE_CACHE_FILE: string = path.join(os.tmpdir(), '.staxpayments_routes');
+// offlineRouteCacheFile returns where terminal routes are persisted so a terminal
+// remains reachable when the gateway is not. It is resolved lazily because os
+// and path are stubbed out in the browser bundle.
+function offlineRouteCacheFile(): string {
+  return path.join(os.tmpdir(), '.staxpayments_routes');
+}
 
 interface OfflineRouteCacheEntry {
   TTL: string;
@@ -571,10 +574,10 @@ export class StaxPaymentsBaseClient {
 
   private _readOfflineCache(): OfflineRouteCache | undefined {
     try {
-      if (!fs.existsSync(OFFLINE_ROUTE_CACHE_FILE)) {
+      if (!fs.existsSync(offlineRouteCacheFile())) {
         return undefined;
       }
-      return JSON.parse(fs.readFileSync(OFFLINE_ROUTE_CACHE_FILE, 'utf8')) as OfflineRouteCache;
+      return JSON.parse(fs.readFileSync(offlineRouteCacheFile(), 'utf8')) as OfflineRouteCache;
     } catch (e) {
       // An unreadable or corrupt cache is a missing cache, never a failed
       // transaction.
@@ -634,7 +637,7 @@ export class StaxPaymentsBaseClient {
         },
       };
 
-      fs.writeFileSync(OFFLINE_ROUTE_CACHE_FILE, JSON.stringify(cache), { mode: 0o600 });
+      fs.writeFileSync(offlineRouteCacheFile(), JSON.stringify(cache), { mode: 0o600 });
     } catch (e) {
       // Persisting is an optimization; the in-memory cache still stands.
     }

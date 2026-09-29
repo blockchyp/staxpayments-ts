@@ -18,6 +18,6 @@ export * from './src/mappers'
 
 // Per-namespace clients. Each namespace is also importable directly via its
 // package subpath, e.g. `import { PaymentsClient } from
-// '@blockchyp/staxpayments-ts/payments'`.
+// '@staxpayments/staxpayments-ts/payments'`.
 export * as payments from './src/payments'
 export * as terminals from './src/terminals'

@@ -11,7 +11,7 @@ import {StaxPaymentsBaseClient, StaxApiCredentials, StaxPaymentsCredentials} fro
 
 // Re-exported so this namespace can be consumed directly via its subpath
 // (e.g. `import { TerminalsClient, StaxApiCredentials } from
-// '@blockchyp/staxpayments-ts/terminals'`).
+// '@staxpayments/staxpayments-ts/terminals'`).
 export {StaxApiCredentials, StaxPaymentsCredentials}
 
 // TerminalsClient exposes the Terminal Management Endpoints for the Stax Payments
