@@ -1,6 +1,6 @@
 {
   "name": "@blockchyp/staxpayments-ts",
-  "version": "2.30.17",
+  "version": "2.30.18",
   "description": "Stax Payments Typescript Client",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
