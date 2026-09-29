@@ -12,7 +12,7 @@ import {StaxPaymentsBaseClient, StaxApiCredentials, StaxPaymentsCredentials} fro
 
 // Re-exported so this namespace can be consumed directly via its subpath
 // (e.g. `import { PaymentsClient, StaxApiCredentials } from
-// '@blockchyp/staxpayments-ts/payments'`).
+// '@staxpayments/staxpayments-ts/payments'`).
 export {StaxApiCredentials, StaxPaymentsCredentials}
 
 // PaymentsClient exposes the Payment Endpoints for the Stax Payments

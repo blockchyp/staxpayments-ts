@@ -1,4 +1,4 @@
-name: blockchyp-ts
+name: staxpayments-ts
 on:
   push:
     branches:

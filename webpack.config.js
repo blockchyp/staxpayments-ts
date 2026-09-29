@@ -8,14 +8,14 @@ var PATHS = {
 
 var config = {
   entry: {
-    'blockchyp': './index.ts',
-    'blockchyp.min': './index.ts'
+    'staxpayments': './index.ts',
+    'staxpayments.min': './index.ts'
   },
   output: {
     path: PATHS.bundles,
     filename: '[name].js',
     libraryTarget: 'umd',
-    library: 'BlockChyp',
+    library: 'StaxPayments',
     umdNamedDefine: true
   },
   resolve: {
@@ -25,6 +25,7 @@ var config = {
       "tls": false,
       "net": false,
       "path": false,
+      "os": false,
       "zlib": false,
       "http": false,
       "https": false,
