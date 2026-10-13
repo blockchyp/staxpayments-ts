@@ -1,6 +1,6 @@
 {
   "name": "@staxpayments/staxpayments-ts",
-  "version": "2.30.20",
+  "version": "2.30.21",
   "description": "Stax Payments Typescript Client",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
