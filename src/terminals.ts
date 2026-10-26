@@ -98,7 +98,7 @@ export class TerminalsClient {
    * Activates a terminal.
    */
   async activateTerminal(request: Models.TerminalActivationRequestV2): Promise<AxiosResponse<Models.Acknowledgement>> {
-    return this.base._coreRequest('post', '/terminals', request);
+    return this.base._coreRequest('post', '/internal/terminal', request);
   }
   /**
    * Reboot a payment terminal.
